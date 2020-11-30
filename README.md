@@ -2,7 +2,7 @@
 
 https://kaiyuncheng.github.io/SignIn_demo/index.html
 
-+ Form Validator
++ Form Validator - Email and Password
 + using 3 ways to post api, axios, xhr, fetch
 
 # **Visitor Interface **
