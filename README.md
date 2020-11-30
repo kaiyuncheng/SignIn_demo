@@ -2,7 +2,8 @@
 
 https://kaiyuncheng.github.io/SignIn_demo/index.html
 
-using 3 ways to post api, axios, xhr, fetch
++ Form Validator
++ using 3 ways to post api, axios, xhr, fetch
 
 # **Visitor Interface **
 ![](img/login1.png)

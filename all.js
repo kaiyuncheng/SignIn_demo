@@ -4,6 +4,9 @@ const registerBtn = document.querySelector('.registerBtn');
 const register = document.querySelector('.register');
 const signInBtn = document.querySelector('#signIn');
 const signupBtn = document.querySelector('#signup');
+let emailSuccess = false;
+let passwordSuccess = false;
+let passwordReSuccess = false;
 
 clickItems.forEach(item => {
   item.addEventListener('click', active);
@@ -28,12 +31,122 @@ function active(e) {
   clickP.classList.remove('contentNone');
 }
 
-signupBtn.addEventListener('click', function () {
-  send('signup');
+
+function showError(input, msg) {
+  let field = input.parentElement;
+  field.className = 'field error';
+  field.querySelector('.validate_txt').innerHTML = msg;
+  field.querySelector('span').innerHTML = `error`;
+}
+
+function showSuccess(input) {
+  let field = input.parentElement;
+  field.className = 'field error';
+  field.querySelector('.validate_txt').innerHTML = '';
+  field.querySelector('span').innerHTML = `check`;
+}
+
+function reset(type) {
+  document.querySelectorAll('.person').forEach(function (icon) {
+    icon.innerHTML = `person`;   
+  });
+  document.querySelectorAll('.vpn_key').forEach(function (icon) {
+    icon.innerHTML = `vpn_key`;
+  });
+
+  document.querySelector(`#email_${type}`).value = '';
+  document.querySelector(`#password_${type}`).value = '';
+  document.querySelector(`#passwordRe_signup`).value = '';
+}
+
+function checkRequired(inputAry) {
+  inputAry.forEach(function(input){
+    if (input.value === '') {
+      showError(input, `${input.placeholder} is required`);
+    } else {
+      showSuccess(input);
+    }
+  })
+}
+
+function checkEmail(input) {
+  const re = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+  if (!re.test(String(input.value).toLowerCase())) {
+    showError(
+      input, `Email is not valid`,
+    );
+    emailSuccess = false;
+  } else {
+    showSuccess(input);
+    emailSuccess = true;
+  };
+}
+
+function checkLength(inputAry, min, max) {
+  inputAry.forEach(function (input) {
+    if (input.value.length < min || input.value.length > max) {
+      showError(
+        input,
+        `${input.placeholder} must be ${min} - ${max} characters`,
+      );
+      if (input.placeholder === 'Password') {
+        passwordSuccess = false;
+      }
+    } else {
+      showSuccess(input);
+      if (input.placeholder === 'Password') {
+        passwordSuccess = true;
+      } 
+    }
+  });
+}
+
+function checkPasswords(inputA, inputB) {
+  if (inputA.value !== inputB.value) {
+    showError(inputB, `Passwords do not match.`);
+    passwordReSuccess = false;
+  } else if(inputB.value == '' || inputB.value.length < 6){
+    checkLength([inputB],6, 12); 
+    passwordReSuccess = false;
+  }else {
+    showSuccess(inputB);
+    passwordReSuccess = true;
+  }
+}
+
+
+function validate(type){
+  let email = document.querySelector(`#email_${type}`);
+  let password = document.querySelector(`#password_${type}`);
+
+  if (type === 'signup') {
+    let passwordRe = document.querySelector(`#passwordRe_${type}`);
+    checkRequired([email, password, passwordRe]);
+    checkEmail(email);
+    checkLength([password, passwordRe], 6, 12);
+    checkPasswords(password, passwordRe);
+    if (passwordSuccess && passwordReSuccess && emailSuccess) {
+      send(type);
+    }
+  } else {
+    checkRequired([email, password]);
+    checkLength([password], 6, 12);
+    checkEmail(email);
+    if (passwordSuccess && emailSuccess) {
+      send(type);
+    }
+  }
+
+};
+
+signupBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+  validate('signup');
 });
 
-signInBtn.addEventListener('click', function () {
-  send('signIn');
+signInBtn.addEventListener('click', function (e) {
+  e.preventDefault();
+  validate('signIn');
 });
 
 function send(type) {
@@ -43,23 +156,24 @@ function send(type) {
     password: document.querySelector(`#password_${type}`).value,
   };
 
-  // axios 寫法
-  const axiosPost = function () {
-    axios
-      .post(url, user)
-      .then(res => {
-        console.log(res);
-        swal({
-          title: res.data.message,
+    // axios 寫法
+    const axiosPost = function () {
+      axios
+        .post(url, user)
+        .then(res => {
+          console.log(res);
+          swal({
+            title: res.data.message,
+          });
+          reset(type);
+        })
+        .catch(err => {
+          console.log(err);
+          swal({
+            title: err,
+          });
         });
-      })
-      .catch(err => {
-        console.log(err);
-        swal({
-          title: err,
-        });
-      });
-  };
+    };
 
   // xhr 寫法
   const xhrPost = function () {
@@ -72,6 +186,7 @@ function send(type) {
       swal({
         title: res.message,
       });
+      reset(type);
     };
   };
 
@@ -88,13 +203,11 @@ function send(type) {
         swal({
           title: data.message,
         });
+        reset(type);
       })
       .catch(err => console.log(err));
   };
 
   fetchPost();
-
-  document.querySelector(`#email_${type}`).value = '';
-  document.querySelector(`#password_${type}`).value = '';
-  document.querySelector(`#password_repeat`).value = '';
+  
 }
